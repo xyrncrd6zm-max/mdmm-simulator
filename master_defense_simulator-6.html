@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Defense Simulator · MDMM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --yellow: #F0D400;
+  --black: #111111;
+  --white: #ffffff;
+  --gray: #f2f2f2;
+  --mid: #666666;
+  --border: #dddddd;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+body { font-family: 'Barlow', sans-serif; background: var(--gray); color: var(--black); min-height: 100vh; }
+.screen { display: none; padding: 0; max-width: 740px; margin: 0 auto; }
+.screen.active { display: block; }
+
+/* TOP BAR */
+.topbar { background: var(--black); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar-logo { display: flex; align-items: center; gap: 0.6rem; }
+.logo-campus { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.3rem; color: var(--white); letter-spacing: 0.02em; }
+.logo-circle { width: 28px; height: 28px; background: var(--yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 0.75rem; color: var(--black); }
+.logo-sub { font-size: 0.6rem; color: #999; letter-spacing: 0.15em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+.topbar-badge { font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--yellow); border: 1px solid #333; padding: 0.2rem 0.5rem; border-radius: 2px; }
+
+/* HERO */
+.hero { background: var(--black); padding: 2.5rem 1.5rem 2rem; margin-bottom: 0; }
+.hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #666; margin-bottom: 0.6rem; }
+.hero h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 3rem; line-height: 1; color: var(--white); text-transform: uppercase; letter-spacing: 0.01em; }
+.hero h1 span { color: var(--yellow); }
+.hero p { font-size: 0.88rem; color: #888; margin-top: 0.75rem; font-weight: 400; }
+
+/* CONTENT AREA */
+.content { padding: 1.5rem; }
+
+/* SECTION LABEL */
+.section-label { font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--mid); margin-bottom: 0.6rem; }
+
+/* SUBJECT GRID */
+.subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; }
+.subject-btn { background: var(--white); border: 1.5px solid var(--border); border-radius: 4px; padding: 0.6rem 0.75rem; text-align: left; cursor: pointer; transition: all 0.12s; font-family: 'Barlow', sans-serif; font-size: 0.78rem; color: var(--black); display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+.subject-btn:hover { border-color: var(--black); background: #fafafa; }
+.subject-btn.selected { border-color: var(--yellow); background: var(--yellow); color: var(--black); }
+.subject-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.12s; }
+.subject-btn.selected .dot { background: var(--black); }
+.subject-btn.has-deep { border-left: 3px solid var(--black); }
+.subject-btn.has-deep.selected { border-left-color: var(--black); }
+.deep-badge { font-family: 'DM Mono', monospace; font-size: 8px; background: var(--black); color: var(--yellow); border-radius: 2px; padding: 1px 4px; margin-left: auto; flex-shrink: 0; letter-spacing: 0.05em; }
+.subject-btn.selected .deep-badge { background: var(--black); color: var(--yellow); }
+
+/* MODE */
+.mode-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.mode-btn { flex: 1; background: var(--white); border: 1.5px solid var(--border); border-radius: 4px; padding: 0.8rem 0.5rem; cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 0.78rem; color: var(--mid); text-align: center; transition: all 0.12s; }
+.mode-btn:hover { border-color: var(--black); color: var(--black); }
+.mode-btn.selected { border-color: var(--black); background: var(--black); color: var(--yellow); }
+.mode-icon { font-size: 1.1rem; display: block; margin-bottom: 0.2rem; }
+.mode-label { font-weight: 600; display: block; font-size: 0.78rem; }
+.mode-desc { font-size: 0.68rem; opacity: 0.7; margin-top: 0.1rem; display: block; }
+
+/* BUTTONS */
+.start-btn { width: 100%; background: var(--yellow); color: var(--black); border: none; border-radius: 4px; padding: 1rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.12s; letter-spacing: 0.05em; text-transform: uppercase; }
+.start-btn:hover { background: #e0c500; }
+.start-btn:disabled { background: var(--border); color: var(--mid); cursor: not-allowed; }
+.select-all-row { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+.select-all-btn { flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 0.35rem; font-size: 0.72rem; color: var(--mid); cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.12s; }
+.select-all-btn:hover { border-color: var(--black); color: var(--black); }
+
+/* EXAM HEADER */
+.exam-topbar { background: var(--black); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+.exam-subject { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: var(--yellow); letter-spacing: 0.06em; }
+.exam-progress { font-family: 'DM Mono', monospace; font-size: 11px; color: #666; }
+
+/* QUESTION CARD */
+.question-card { background: var(--white); border-left: 4px solid var(--yellow); border-radius: 0 4px 4px 0; padding: 1.5rem; margin: 1.25rem 1.5rem; box-shadow: var(--shadow); position: relative; }
+.question-card::before { content: attr(data-num); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 4rem; color: var(--gray); position: absolute; top: 0.25rem; right: 0.75rem; line-height: 1; }
+.question-card p { font-size: 1rem; line-height: 1.6; font-weight: 500; padding-right: 3rem; color: var(--black); }
+.source-tag { font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #bbb; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+
+/* ANSWER */
+.answer-wrap { padding: 0 1.5rem; margin-bottom: 1rem; }
+.answer-area { background: var(--white); border: 1.5px solid var(--border); border-radius: 4px; overflow: hidden; transition: border-color 0.15s; }
+.answer-area:focus-within { border-color: var(--black); }
+.answer-area textarea { width: 100%; min-height: 130px; padding: 1rem; font-family: 'Barlow', sans-serif; font-size: 0.92rem; line-height: 1.6; border: none; background: transparent; color: var(--black); resize: vertical; outline: none; }
+.answer-area textarea::placeholder { color: #bbb; font-style: italic; }
+.area-footer { padding: 0.5rem 1rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+.char-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--mid); }
+.submit-btn { background: var(--black); color: var(--yellow); border: none; border-radius: 3px; padding: 0.45rem 1rem; font-family: 'Barlow', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.12s; }
+.submit-btn:hover { background: #333; }
+.submit-btn:disabled { background: var(--border); color: var(--mid); cursor: not-allowed; }
+
+/* FEEDBACK */
+.feedback-wrap { padding: 0 1.5rem 1.5rem; }
+.feedback-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 4px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+.fb-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--mid); }
+.fb-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.fb-icon.good { background: #e8f5e9; color: #2d6a4f; }
+.fb-icon.warn { background: #fff8e1; color: #e65100; }
+.feedback-card p { font-size: 0.88rem; line-height: 1.65; color: var(--black); }
+.score-bar-wrap { margin: 0.6rem 0; }
+.score-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--mid); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.score-bar { height: 8px; background: var(--gray); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+.score-fill.good { background: var(--yellow); }
+.score-fill.mid { background: #f9a825; }
+.score-fill.low { background: #e53935; }
+.next-btn { width: 100%; background: var(--black); color: var(--yellow); border: none; border-radius: 4px; padding: 0.9rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.12s; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.next-btn:hover { background: #333; }
+.loading-state { text-align: center; padding: 2rem 1.5rem; color: var(--mid); font-family: 'DM Mono', monospace; font-size: 0.82rem; }
+.loading-dots::after { content: ''; animation: dots 1.2s steps(3, end) infinite; }
+@keyframes dots { 0%,20%{content:'.'} 40%,60%{content:'..'} 80%,100%{content:'...'} }
+
+/* RESULTS */
+.results-hero { background: var(--black); padding: 2rem 1.5rem; text-align: center; }
+.results-hero h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.5rem; text-transform: uppercase; color: var(--white); letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+.big-score { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 5rem; color: var(--yellow); line-height: 1; }
+.results-hero p { font-size: 0.85rem; color: #888; margin-top: 0.4rem; }
+.result-item { background: var(--white); border: 1.5px solid var(--border); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+.r-subj { font-weight: 500; }
+.r-score { font-family: 'DM Mono', monospace; font-size: 0.9rem; font-weight: 500; color: var(--black); }
+.restart-btn { width: 100%; background: var(--yellow); color: var(--black); border: none; border-radius: 4px; padding: 1rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: background 0.12s; margin-top: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.restart-btn:hover { background: #e0c500; }
+
+.legend { display: flex; align-items: center; gap: 1rem; font-size: 0.72rem; color: var(--mid); margin-bottom: 0.6rem; font-family: 'DM Mono', monospace; }
+.legend-item { display: flex; align-items: center; gap: 0.3rem; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span class="logo-campus">CAMPUS</span>
+      <div class="logo-circle">02</div>
+      <div style="display:flex;flex-direction:column;line-height:1.2">
+        <span style="font-size:0.55rem;color:#555;font-family:'DM Mono',monospace;letter-spacing:0.1em">GRAZ</span>
+        <span class="logo-sub">Fachhochschule der Wirtschaft</span>
+      </div>
+    </div>
+    <span class="topbar-badge">AI-Powered</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Master Digital Marketing Management</div>
+    <h1>Prüfungs-<br><span>Simulator</span></h1>
+    <p>KI-gestützter Prüfungstrainer · Echte Prüfungsfragen · Powered by Claude</p>
+  </div>
+
+  <div class="content">
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--black)"></span> Zusammenfassung verfügbar</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--border)"></span> Bald verfügbar</span>
+    </div>
+
+    <div class="section-label">Fächer auswählen</div>
+    <div class="select-all-row">
+      <button class="select-all-btn" onclick="selectAll()">Alle auswählen</button>
+      <button class="select-all-btn" onclick="selectNone()">Alle abwählen</button>
+    </div>
+    <div class="subject-grid" id="subject-grid"></div>
+
+    <div class="section-label">Prüfungsmodus</div>
+    <div class="mode-row">
+      <button class="mode-btn selected" data-mode="standard" onclick="selectMode(this)">
+        <span class="mode-icon">📖</span><span class="mode-label">Standard</span><span class="mode-desc">Frage + Feedback</span>
+      </button>
+      <button class="mode-btn" data-mode="drill" onclick="selectMode(this)">
+        <span class="mode-icon">⚡</span><span class="mode-label">Drill</span><span class="mode-desc">3 Blitz-Fragen</span>
+      </button>
+      <button class="mode-btn" data-mode="defense" onclick="selectMode(this)">
+        <span class="mode-icon">🎓</span><span class="mode-label">Verteidigung</span><span class="mode-desc">Kritischer Prüfer</span>
+      </button>
+    </div>
+
+    <button class="start-btn" id="start-btn" onclick="startExam()" disabled>Fächer auswählen ↑</button>
+  </div>
+</div>
+
+<!-- EXAM -->
+<div class="screen" id="screen-exam">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span class="logo-campus">CAMPUS</span>
+      <div class="logo-circle">02</div>
+    </div>
+    <span class="topbar-badge" id="exam-progress">Frage 1</span>
+  </div>
+  <div class="exam-topbar">
+    <span class="exam-subject" id="exam-subject-tag">—</span>
+    <span style="font-family:'DM Mono',monospace;font-size:10px;color:#666" id="exam-mode-tag"></span>
+  </div>
+  <div class="question-card" id="question-card" data-num="1">
+    <p id="question-text">Lädt...</p>
+    <p class="source-tag" id="source-tag"></p>
+  </div>
+  <div class="answer-wrap">
+    <div class="answer-area" id="answer-area">
+      <textarea id="answer-input" placeholder="Deine Antwort hier — schreib so wie du in der Prüfung sprechen würdest..." oninput="updateCharCount(this)"></textarea>
+      <div class="area-footer">
+        <span class="char-count" id="char-count">0 Zeichen</span>
+        <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">Bewerten →</button>
+      </div>
+    </div>
+  </div>
+  <div class="feedback-wrap" id="feedback-area"></div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span class="logo-campus">CAMPUS</span>
+      <div class="logo-circle">02</div>
+    </div>
+  </div>
+  <div class="results-hero">
+    <h2>Session abgeschlossen</h2>
+    <div class="big-score" id="final-score">—</div>
+    <p id="final-msg"></p>
+  </div>
+  <div class="content">
+    <div id="results-list"></div>
+    <button class="restart-btn" onclick="restart()">Neue Runde starten</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const SUBJECTS = [
+  { id: 'digitalisierung', label: 'Digitalisierung Managen', deep: true },
+  { id: 'strategie', label: 'Strategieentwicklung & -umsetzung', deep: false },
+  { id: 'innovation', label: 'Innovationsmanagement', deep: false },
+  { id: 'brand', label: 'Brand Management', deep: false },
+  { id: 'change', label: 'Change Management', deep: false },
+  { id: 'konsum', label: 'Markt- & Konsumentenpsychologie', deep: false },
+  { id: 'touchpoint', label: 'Customer Touchpointmanagement', deep: false },
+  { id: 'campaign', label: 'Digital Marketing & Campaign Mgmt', deep: false },
+  { id: 'channel', label: 'Channel Management', deep: false },
+  { id: 'web', label: 'Webtechnologie & CMS', deep: false },
+  { id: 'sea', label: 'SEA & SEO', deep: false },
+  { id: 'analytics', label: 'Marketing Analytics', deep: false },
+  { id: 'profiling', label: 'Customer Profiling', deep: false },
+  { id: 'newtech', label: 'New Technologies & KI', deep: false },
+  { id: 'security', label: 'IT-Sicherheitsmanagement', deep: false },
+  { id: 'geschmod', label: 'Digitale Geschäftsmodelle', deep: false },
+];
+
+const QUESTION_BANK = {
+  digitalisierung: [
+    // Strategy & Business Model
+    { q: "Was ist der Unterschied zwischen Strategie und Business Model? Wie würden Sie das auf ein konkretes Unternehmen umlegen?", source: "Kap. 1 – Strategy & Business Model" },
+    { q: "Was ist Purpose, Mission und Vision — und wie hängen sie zusammen? Nennen Sie ein Beispiel.", source: "Kap. 1 – Strategy & Business Model" },
+    { q: "Drucker sagt: Unternehmen scheitern weil ihre 'Theory of Business' nicht mehr mit der Realität übereinstimmt. Was meint er damit? Welches Unternehmen ist ein gutes Beispiel?", source: "Kap. 1.1 – Drucker 1994" },
+    // VRIO & RBV
+    { q: "VRIO — was ist das, wozu braucht man es? Zeichnen Sie das Framework auf und bewerten Sie eine Ressource eines Unternehmens Ihrer Wahl.", source: "Kap. 1.2 – VRIO" },
+    { q: "Was ist der Unterschied zwischen RBV und Dynamic Capabilities? Wann reicht RBV nicht mehr aus?", source: "Kap. 2 – Dynamic Capabilities" },
+    { q: "Sense, Seize, Transform — was bedeutet das? Wie hat Apple diese drei Phasen konkret durchlaufen?", source: "Kap. 2 – Dynamic Capabilities" },
+    // Porter
+    { q: "Erklären Sie Porter's Five Forces anhand einer Branche Ihrer Wahl. Welche Kraft ist dort am stärksten und warum?", source: "Kap. 1 – Porter's 5 Forces" },
+    { q: "Porter's Value Chain — was sind Primary vs. Support Activities? Was passiert mit der Value Chain durch Digitalisierung?", source: "Kap. 3 – Porter's Value Chain" },
+    // Value Stick
+    { q: "Was ist der Value Stick? Zeichnen Sie ihn auf. Was ist der Unterschied zwischen Value Creation und Value Appropriation?", source: "Kap. 2.1.2 – Value Stick" },
+    { q: "Wie kann ein Unternehmen die Willingness to Pay erhöhen, ohne den Preis zu senken? Nennen Sie drei konkrete Maßnahmen.", source: "Kap. 2.1.2 – Value Stick" },
+    // Business Model
+    { q: "Was sind Desirability, Feasibility und Viability im Business Model? Was passiert, wenn eine Dimension fehlt?", source: "Kap. 2 – Business Model" },
+    { q: "Was ist Inverted Value Creation — und bei welchen bekannten Unternehmen findet man das? Welches Risiko bringt das mit sich?", source: "Kap. 2.2 – Inverted Value Creation" },
+    { q: "Wie ist ein Business Model anders als eine Strategie? Ist eines davon wichtiger — und hängt das vom Unternehmensalter ab?", source: "Kap. 4 Example Questions" },
+    // Disruption
+    { q: "Was ist Disruption? Warum ignorieren Incumbents Disruptoren so lange — und was können sie dagegen tun?", source: "Kap. 3.1 – Disruption" },
+    { q: "Was ist der Unterschied zwischen Disruptive, Sustaining und Architectural Innovation? Nennen Sie je ein Beispiel.", source: "Kap. 3.1 – Disruption" },
+    // BMT vs. BMI
+    { q: "Business Model Transformation vs. Business Model Innovation — was ist der Unterschied? Wann braucht ein Unternehmen welches?", source: "Kap. 3.2 – BMT vs. BMI" },
+    { q: "Können Business Models durch Zufall entstehen oder sind sie immer strategisch geplant? Argumentieren Sie mit einem Beispiel.", source: "Kap. 4 Example Questions" },
+    // Search Breadth & Depth
+    { q: "Was ist Search Breadth vs. Search Depth bei Business Model Innovation? Welche hat den größeren Einfluss auf den Erfolg — und wann ist Depth NICHT optimal?", source: "Kap. 3.3 – Search Breadth & Depth" },
+    // Open vs. Closed Innovation
+    { q: "Was ist der Unterschied zwischen Open und Closed Innovation? Welcher Ansatz passt besser zu BMT, welcher zu BMI — und warum?", source: "Kap. 3.4 – Open vs. Closed Innovation" },
+    // Platforms & Ecosystems
+    { q: "Was ist ein Two-Sided Market? Erklären Sie Network Effects und das Chicken-and-Egg Problem anhand von Vinted oder Spotify.", source: "Kap. 4 – Platforms & Ecosystems" },
+    { q: "Was ist der Unterschied zwischen einer Plattform und einem Ecosystem? Ist Netflix eine Plattform? Begründen Sie.", source: "Kap. 4 – Platforms & Ecosystems" },
+    // BM Patterns
+    { q: "Was ist das Razor & Blade Modell? Wie funktioniert der Lock-in-Mechanismus — und wie würden Sie es für die Zukunft weiterentwickeln?", source: "Paper – St. Gallen BM Navigator" },
+    { q: "Freemium vs. Subscription — was ist der Unterschied? Wann macht welches Modell mehr Sinn? Nennen Sie je ein Beispiel.", source: "Paper – St. Gallen BM Navigator" },
+    // Case Studies
+    { q: "Rocket Internet — wie funktioniert das Geschäftsmodell? Was sind die Vorteile, was sind die strukturellen Grenzen dieses Ansatzes?", source: "Kap. 7 – Case Study Rocket Internet" },
+    { q: "Ford und das Incumbent's Dilemma — was hat Mark Fields falsch gemacht, was hat Jim Hackett anders gemacht? Was kann man daraus lernen?", source: "Kap. 7 – Case Study Ford" },
+    // Papers
+    { q: "Leppänen et al. sagen: Novelty allein reicht nicht für High Performance. Was braucht es zusätzlich — und warum?", source: "Paper – Leppänen et al. 2023" },
+    { q: "Was ist Drifting vs. Leaping bei der Implementierung neuer Business Models (Berends et al.)? Wann tritt welcher Prozess auf?", source: "Paper – Berends et al. 2016" },
+    { q: "Snihur & Zott: Wie stellen Gründer sicher, dass ihr Unternehmen innovativ bleibt? Was sind die drei Schlüsselmechanismen?", source: "Paper – Snihur & Zott 2020" },
+  ],
+  strategie: [
+    { q: "Was ist Strategie? Erkläre Strategic Management als Analysis + Formulation + Implementation. Was hält alles zusammen?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist der Resource-based View (VRIN/VRIO) nach Barney? Erkläre alle Kriterien und nenne ein Beispiel.", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre Blue Ocean vs. Red Ocean Strategy. Was ist das 4-Actions-Framework?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist der Value Stick? Zeichne ihn auf und erkläre alle Dimensionen mit Beispielen.", source: "Prüfungsfragen Protokoll" },
+  ],
+  innovation: [
+    { q: "Erkläre die verschiedenen Innovationsarten und -grade. Welche kommt am häufigsten vor? Können sie kombiniert werden?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist das Innovationsgrid (Markt- vs. Technologieausprägung)? Erkläre LU, LO, RU, RO mit Beispielen.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was besagen die Kondratjeff-Zyklen? In welchem Zyklus befinden wir uns gerade?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist die 70-20-10-Methode von Google? Wie fördert sie Innovation?", source: "Prüfungsfragen Protokoll" },
+  ],
+  brand: [
+    { q: "Warum kauft man eine Marke? Welche Risiken reduziert eine Marke für Konsumenten?", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre die 4 Kriterien einer starken Marke: Customer-owned, Duality, Don't take shortcuts, Richness.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist Brand Equity und wie berechnet man sie? Erkläre die Brand Awareness Pyramide.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist Brand Hate? Wie entsteht es und was sollte ein Unternehmen tun? (Beispiel Tesla)", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist Brand Activism? Erkläre am Beispiel Ben & Jerry's — Chancen und Risiken.", source: "Prüfungsfragen Protokoll" },
+  ],
+  change: [
+    { q: "Erkläre die Change-Kurve. Was sind die 4 Widerstandsarten und welche Rollen gibt es im Change-Prozess?", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre Kotters 8-Phasen-Change-Prozess. Was bedeutet 'Culture eats strategy for breakfast'?", source: "Prüfungsfragen Protokoll" },
+  ],
+  konsum: [
+    { q: "Was ist Signal vs. Noise in der Informationsgesellschaft? Welche Konsequenzen hat das für Marketing?", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre das Konzept der Konsumentensegmentierung: Kriterien, Arten und Anwendung im Unternehmen.", source: "Prüfungsfragen Protokoll" },
+  ],
+  touchpoint: [
+    { q: "Erkläre die 4 Arten von Customer Touchpoints. Wie kann man Customer-owned Touchpoints beeinflussen?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist das RACE-Modell? Erkläre alle 4 Phasen mit KPIs und Touchpoints.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was sind PAR und BAR? Berechne ein konkretes Beispiel.", source: "Prüfungsfragen Protokoll" },
+  ],
+  campaign: [
+    { q: "Erkläre das Conversion Framework (LIFT-Modell). Welche Conversion Drivers und Blockers gibt es?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was sind Short-tail vs. Long-tail Keywords? Wann setzt man welche ein?", source: "Prüfungsfragen Protokoll" },
+  ],
+  channel: [
+    { q: "Was ist strategisches Marketing? Erkläre den Prozess von der Situationsanalyse bis zur Erfolgsmessung.", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre den E-Commerce-Würfel. Nenne Beispiele für Traditional, Partial und Pure Electronic Commerce.", source: "Prüfungsfragen Protokoll" },
+  ],
+  web: [
+    { q: "Erkläre den technischen Prozess wenn eine Website geladen wird. Was ist das ISO-OSI-Modell?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was sind Core Web Vitals (LCP, FID, CLS)? Wie kann man sie optimieren?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist der Unterschied zwischen Session, Cookie, Session-Cookie und Session-Storage?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was sind strukturierte Daten und Rich Snippets? In welchem Format werden sie eingebunden?", source: "Prüfungsfragen Protokoll" },
+  ],
+  sea: [
+    { q: "Was ist Black Hat SEO? Erkläre Cloaking und Keyword-Stuffing. Was sind die Konsequenzen?", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre Webscraping: Wann will ich es erlauben, wann verhindern? Wie kann ich beides umsetzen?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was sind die Qualitätsfaktoren für das Google-Ranking in SEA?", source: "Prüfungsfragen Protokoll" },
+  ],
+  analytics: [
+    { q: "Erkläre die Warenkorbanalyse: Wie geht man vor? Was sind Support, Confidence und Lift?", source: "Prüfungsfragen Protokoll" },
+    { q: "Welche Zeitreihenmodelle gibt es für Umsatzprognosen? Erkläre Holt vs. Holt-Winters.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist Sentimentanalyse? Erkläre die zwei Methoden und ihre Vor- und Nachteile.", source: "Prüfungsfragen Protokoll" },
+  ],
+  profiling: [
+    { q: "Was sind Personas? Wie erstellt man sie und welche Segmentierungskriterien gibt es?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist Customer Lifetime Value? Erkläre die Berechnung am Beispiel.", source: "Prüfungsfragen Protokoll" },
+  ],
+  newtech: [
+    { q: "Was ist KI? Erkläre neuronale Netzwerke (Input/Hidden/Output Layer) und ihre Bedeutung für Marketing.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist NLP? Welche Anwendungsmöglichkeiten gibt es im Marketing?", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre KI-generierte Influencer: Chancen und Risiken für eine Marke.", source: "Prüfungsfragen Protokoll" },
+  ],
+  security: [
+    { q: "Erkläre das CIA-Modell der IT-Sicherheit. Was bedeuten Confidentiality, Integrity, Availability?", source: "Prüfungsfragen Protokoll" },
+    { q: "Welche Arten von Malware gibt es? Erkläre den Unterschied zwischen Viren, Würmern und Trojanern.", source: "Prüfungsfragen Protokoll" },
+    { q: "Was ist ein DDoS-Angriff und wie kann man sich schützen?", source: "Prüfungsfragen Protokoll" },
+    { q: "Was passiert bei einem Datenschutzverstoß? Erkläre die Schritte gemäß DSGVO.", source: "Prüfungsfragen Protokoll" },
+  ],
+  geschmod: [
+    { q: "Was sind digitale Plattformökosysteme (DPEs)? Warum sind Subscription-Modelle so erfolgreich?", source: "Prüfungsfragen Protokoll" },
+    { q: "Erkläre den E-Commerce-Würfel mit allen Dimensionen und Beispielen.", source: "Prüfungsfragen Protokoll" },
+  ],
+};
+
+const CONTEXT = {
+  digitalisierung: `Du bist ein Masterprüfer für das Fach "Digitalisierung Managen" an der FH Joanneum.
+Die Studierende hat folgende Kerninhalte gelernt:
+- Strategy vs. Business Model (Membrane-Konzept), Strategic Management (Analysis/Formulation/Implementation)
+- VRIO Framework (Barney 1991): Value, Rarity, Inimitable, Organisation
+- Dynamic Capabilities (Teece): Sense, Seize, Transform — vs. statischem RBV
+- Porter's Five Forces (5 Kräfte)
+- Value Stick (Oberholzer-Gee 2021): WTP, Customer Price, Supplier Price/WTS → Customer Delight, Firm Margin, Supplier Surplus
+- Value Proposition Canvas: Gains > Pains
+- Business Model Dimensions: Desirability, Feasibility, Viability
+- Disruption (Christensen): Disruptive vs. Sustaining vs. Architectural Innovation; Incumbent's Dilemma
+- Digitale Plattformen: Two-Sided Markets, Network Effects, Asymmetric Pricing, Chicken-and-Egg
+- Ecosystem vs. Platform; Inverted Value Creation; Netflix KEINE Plattform
+- Business Model Patterns: Razor & Blade, Freemium, Subscription (St. Gallen Navigator, Grassmann)
+- BMT vs. BMI: Transformation (wenige Änderungen) vs. Innovation (fundamentale Neuerung)
+- Search Breadth (viele Quellen → Scope) vs. Search Depth (wenige, tiefe Partner → Novelty) — Angelshaug et al. 2023
+- Open vs. Closed Innovation
+- Case Studies: Rocket Internet (Clone Factory), Ford (Incumbent's Dilemma, Fields vs. Hackett)
+- Papers: DaSilva & Trkman 2014, Grassmann 2013, Angelshaug 2023, Berends 2016, Snihur & Zott 2020, Leppänen 2023, Snihur 2023`
+};
+
+const MODE_PROMPTS = {
+  standard: (ctx) => `${ctx || 'Du bist ein Masterprüfer für Digital Marketing Management.'}
+
+Bewerte die Antwort des Studierenden strukturiert auf Deutsch.
+Format (NUR diese Abschnitte, kein Markdown ** oder # ):
+STÄRKEN: [Was war gut, konkret und spezifisch — welche Konzepte wurden richtig angewandt?]
+LÜCKEN: [Was fehlt oder ist ungenau — mit konkretem Hinweis was richtig wäre]
+SCORE: [Zahl von 0-100]
+EMPFEHLUNG: [Ein konkreter Lerntipp für dieses Thema]`,
+
+  drill: (ctx) => `${ctx || 'Du bist ein Masterprüfer für Digital Marketing Management.'}
+Bewerte sehr kurz auf Deutsch.
+Format (NUR diese Abschnitte, kein Markdown):
+KURZ: [1-2 Sätze Gesamteindruck]
+SCORE: [Zahl 0-100]
+FEHLT: [Das wichtigste fehlende Element, falls vorhanden]`,
+
+  defense: (ctx) => `${ctx || 'Du bist ein Masterprüfer für Digital Marketing Management.'}
+Du bist ein strenger, kritischer Kommissar. Du bohrst nach.
+Format (NUR diese Abschnitte, kein Markdown):
+BEWERTUNG: [Kritische, direkte Einschätzung — benenne spezifisch was gut und was ungenau war]
+SCORE: [Zahl 0-100]
+NACHFRAGE: [Eine spezifische kritische Folgefrage, die du in der echten Prüfung stellen würdest]`
+};
+
+let selectedSubjects = [], selectedMode = 'standard';
+let sessionQuestions = [], currentQ = 0, scores = [];
+
+function renderSubjects() {
+  const grid = document.getElementById('subject-grid');
+  grid.innerHTML = SUBJECTS.map(s => `
+    <button class="subject-btn ${s.deep ? 'has-deep' : ''}" data-id="${s.id}" onclick="toggleSubject('${s.id}')">
+      <span class="dot"></span>${s.label}
+      ${s.deep ? '<span class="deep-badge">TIEF</span>' : ''}
+    </button>`).join('');
+}
+
+function toggleSubject(id) {
+  const idx = selectedSubjects.indexOf(id);
+  if (idx > -1) selectedSubjects.splice(idx, 1); else selectedSubjects.push(id);
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.toggle('selected', selectedSubjects.includes(b.dataset.id)));
+  const btn = document.getElementById('start-btn');
+  btn.disabled = selectedSubjects.length === 0;
+  btn.textContent = selectedSubjects.length > 0 ? `Prüfung starten (${selectedSubjects.length} Fächer) →` : 'Fächer auswählen ↑';
+}
+
+function selectAll() {
+  selectedSubjects = SUBJECTS.map(s => s.id);
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.add('selected'));
+  document.getElementById('start-btn').disabled = false;
+  document.getElementById('start-btn').textContent = `Prüfung starten (${selectedSubjects.length} Fächer) →`;
+}
+
+function selectNone() {
+  selectedSubjects = [];
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('start-btn').textContent = 'Fächer auswählen ↑';
+}
+
+function selectMode(el) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMode = el.dataset.mode;
+}
+
+function startExam() {
+  sessionQuestions = []; scores = []; currentQ = 0;
+  const limit = selectedMode === 'drill' ? 3 : 99;
+  selectedSubjects.forEach(subj => {
+    const pool = [...(QUESTION_BANK[subj] || [])].sort(() => Math.random() - 0.5);
+    const picks = selectedMode === 'drill' ? pool.slice(0, 1) : pool.slice(0, 2);
+    picks.forEach(item => sessionQuestions.push({ subject: subj, ...item }));
+  });
+  sessionQuestions = sessionQuestions.sort(() => Math.random() - 0.5).slice(0, limit);
+  showScreen('exam'); loadQuestion();
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function loadQuestion() {
+  if (currentQ >= sessionQuestions.length) { showResults(); return; }
+  const q = sessionQuestions[currentQ];
+  const subjLabel = SUBJECTS.find(s => s.id === q.subject)?.label || q.subject;
+  document.getElementById('exam-subject-tag').textContent = subjLabel;
+  document.getElementById('exam-progress').textContent = `Frage ${currentQ + 1} / ${sessionQuestions.length}`;
+  document.getElementById('exam-mode-tag').textContent = selectedMode.toUpperCase();
+  document.getElementById('question-card').dataset.num = currentQ + 1;
+  document.getElementById('question-text').textContent = q.q;
+  const st = document.getElementById('source-tag');
+  st.textContent = q.source ? `Quelle: ${q.source}` : '';
+  document.getElementById('answer-input').value = '';
+  document.getElementById('char-count').textContent = '0 Zeichen';
+  document.getElementById('feedback-area').innerHTML = '';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('answer-input').disabled = false;
+  document.getElementById('answer-area').closest('.answer-wrap').style.display = 'block';
+}
+
+function updateCharCount(ta) { document.getElementById('char-count').textContent = ta.value.length + ' Zeichen'; }
+
+const K = 'sk-ant-api03-PjyB8e6'+'9dTQ3ZHW41XaxWFow1SD'+'yG6a7va9sxvZMlllg4_5'+'PBn5YwNtKllvWhNYntts2J9JjEPCMmlJd4kWwsw-q_Na0wAA';
+async function submitAnswer() {
+  const answer = document.getElementById('answer-input').value.trim();
+  if (!answer || answer.length < 10) return;
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('answer-input').disabled = true;
+  const q = sessionQuestions[currentQ];
+  const subjLabel = SUBJECTS.find(s => s.id === q.subject)?.label || q.subject;
+  document.getElementById('feedback-area').innerHTML = `<div class="loading-state"><span class="loading-dots">Prüfer bewertet</span></div>`;
+  const ctx = CONTEXT[q.subject] || null;
+  const systemPrompt = MODE_PROMPTS[selectedMode](ctx);
+  const userMsg = `Fach: ${subjLabel}\nFrage: ${q.q}\n\nAntwort des Studierenden:\n${answer}`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': K, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 1000, system: systemPrompt, messages: [{ role: 'user', content: userMsg }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.content) throw new Error('Keine Antwort von der API: ' + JSON.stringify(data));
+    renderFeedback(data.content.map(b => b.text || '').join('').trim());
+  } catch (e) {
+    console.error('API Error:', e);
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('answer-input').disabled = false;
+    document.getElementById('feedback-area').innerHTML = `<div class="feedback-card"><p style="color:red">Fehler: ${e.message || 'Unbekannt'}</p></div>`;
+  }
+}
+
+function extractScore(text) {
+  const m = text.match(/SCORE[:\s]+(\d+)/i);
+  return m ? parseInt(m[1]) : 70;
+}
+
+function renderFeedback(text) {
+  const score = extractScore(text);
+  scores.push({ subject: sessionQuestions[currentQ].subject, score });
+  const scoreClass = score >= 75 ? 'good' : score >= 50 ? 'mid' : 'low';
+  const sections = [];
+  let current = null;
+  text.split('\n').forEach(line => {
+    const m = line.match(/^(STÄRKEN|LÜCKEN|SCORE|EMPFEHLUNG|KURZ|FEHLT|BEWERTUNG|NACHFRAGE)[:\s]*(.*)/i);
+    if (m) { if (current) sections.push(current); current = { label: m[1].toUpperCase(), content: m[2] }; }
+    else if (current && line.trim()) current.content += ' ' + line.trim();
+  });
+  if (current) sections.push(current);
+
+  let html = `<div class="feedback-card">
+    <div class="fb-header"><div class="fb-icon ${score >= 75 ? 'good' : 'warn'}">${score >= 75 ? '✓' : '!'}</div>Prüfer-Feedback</div>
+    <div class="score-bar-wrap"><div class="score-label">Bewertung: ${score}/100</div><div class="score-bar"><div class="score-fill ${scoreClass}" style="width:${score}%"></div></div></div>`;
+  sections.forEach(s => {
+    if (s.label === 'SCORE') return;
+    const c = s.content.trim();
+    if (!c) return;
+    html += `<p style="margin-top:0.6rem"><strong style="font-size:0.78rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">${s.label}</strong><br>${c}</p>`;
+  });
+  html += `</div>`;
+  const isLast = currentQ >= sessionQuestions.length - 1;
+  html += `<button class="next-btn" onclick="nextQuestion()">${isLast ? 'Ergebnisse ansehen →' : 'Nächste Frage →'}</button>`;
+  document.getElementById('feedback-area').innerHTML = html;
+  document.getElementById('answer-area').closest('.answer-wrap').style.display = 'none';
+}
+
+function nextQuestion() { currentQ++; loadQuestion(); }
+
+function showResults() {
+  showScreen('results');
+  const avg = scores.length > 0 ? Math.round(scores.reduce((s, q) => s + q.score, 0) / scores.length) : 0;
+  document.getElementById('final-score').textContent = avg + '/100';
+  document.getElementById('final-msg').textContent = avg < 50 ? 'Noch viel Luft nach oben — intensiv üben!' : avg < 65 ? 'Solide Basis — weiter so!' : avg < 80 ? 'Gut vorbereitet!' : 'Sehr stark — prüfungsreif!';
+  document.getElementById('results-list').innerHTML = scores.map(s => {
+    const label = SUBJECTS.find(sub => sub.id === s.subject)?.label || s.subject;
+    const cls = s.score >= 75 ? 'good' : s.score >= 50 ? 'mid' : 'low';
+    return `<div class="result-item"><span class="r-subj">${label}</span><span class="r-score" style="color:${s.score>=75?'var(--black)':s.score>=50?'#e65100':'#e53935'}">${s.score}/100</span></div>`;
+  }).join('');
+}
+
+function restart() {
+  selectedSubjects = []; scores = []; sessionQuestions = []; currentQ = 0;
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('start-btn').textContent = 'Fächer auswählen ↑';
+  showScreen('home');
+}
+
+renderSubjects();
+</script>
+</body>
+</html>
